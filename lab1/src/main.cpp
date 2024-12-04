@@ -1,45 +1,30 @@
+#include <domain/figure/circle/Circle.hpp>
+#include <graphic/ApplicationGLFW.hpp>
+#include <graphic/drawer/BresenhamsCircleDrawer.hpp>
+#include <graphic/inputprocessor/CircleRadiusUpdateKeyProcessor.hpp>
+#include <graphic/inputprocessor/CommonKeyProcessor.hpp>
+#include <graphic/updater/PulseRadiusCircleUpdater.hpp>
 
-#include <glad/glad.h>
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
+using namespace cust;
 
-int main(void) {
-  GLFWwindow* window;
+int main() {
+    float const radius = 50, rate = 0.2, freq = 10e-9;
 
-  /* Initialize the library */
-  if (!glfwInit()) {
-    return -1;
-  }
+    auto drawer = construct<BresenhamsCircleDrawer>();
+    auto updater = construct<PulseRadiusCircleUpdater>(radius, rate, freq);
 
-  /* Create a windowed mode window and its OpenGL context */
-  window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-  if (!window) {
-    glfwTerminate();
-    return -1;
-  }
+    auto figures = vec<Figure>{
+        construct<Circle>(400, 400, radius, drawer, updater)};
 
-  /* Make the window's context current */
-  glfwMakeContextCurrent(window);
+    auto window = construct<WindowGLFW>(800, 800, str("Circle!"));
 
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    glfwTerminate();
-    return -1;
-  }
+    auto inputProcessors = vec<InputProcessor>{
+        construct<CommonKeyProcessor>(window),
+        construct<CircleRadiusUpdateKeyProcessor>(window, updater, 5)};
 
-  glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
+    ApplicationGLFW app(std::move(window), figures, inputProcessors);
 
-  /* Loop until the user closes the window */
-  while (!glfwWindowShouldClose(window)) {
-    /* Render here */
-    glClear(GL_COLOR_BUFFER_BIT);
+    app.launch();
 
-    /* Swap front and back buffers */
-    glfwSwapBuffers(window);
-
-    /* Poll for and process events */
-    glfwPollEvents();
-  }
-
-  glfwTerminate();
-  return 0;
+    return 0;
 }

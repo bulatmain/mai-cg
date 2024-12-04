@@ -42,6 +42,8 @@ endif()
 
 find_package(glfw3 REQUIRED)
 
+find_package(glm REQUIRED)
+
 find_package(OpenGL REQUIRED)
 
 # Add GLAD as a separate library
@@ -50,13 +52,18 @@ target_include_directories(glad PUBLIC external)
 set_target_properties(glad PROPERTIES LINKER_LANGUAGE C)
 target_compile_features(glad PUBLIC c_std_11)
 
+add_library(source INTERFACE)
+target_include_directories(source INTERFACE src)
+
 # Define the executable
 add_executable(exec src/main.cpp)
 
 # Link libraries to the executable
 target_link_libraries(exec PRIVATE
+    source
     glad
     glfw
+    glm::glm
     OpenGL::GL
 )
 
