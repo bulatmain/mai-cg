@@ -3,15 +3,12 @@
 
 #include <common/Aliases.hpp>
 #include <ctime>
+#include <domain/figure/FigureUpdater.hpp>
 
 namespace cust {
-class Circle;
+class Figure;
 
-class CircleUpdater {
-   protected:
-   public:
-    virtual void update(Circle& circle, timepoint t) = 0;
-};
+class CircleUpdater : public FigureUpdater {};
 }  // namespace cust
 
 #endif

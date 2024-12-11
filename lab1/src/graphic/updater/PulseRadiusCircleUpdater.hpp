@@ -17,8 +17,13 @@ class PulseRadiusCircleUpdater : public CircleUpdater {
     PulseRadiusCircleUpdater(float radius, float pulseAmplitudeRate, float frequency)
         : radius{radius}, pulseAmplitudeRate{pulseAmplitudeRate}, frequency{frequency} {}
 
-    void update(Circle& circle, timepoint t) override {
-        circle.r = radius *  (1.0f + pulseAmplitudeRate * sin(t));
+    void update(ptr<Figure> const& figure, timepoint t) override {
+        try {
+            auto circle = std::dynamic_pointer_cast<Circle>(figure);
+            circle->r = radius *  (1.0f + pulseAmplitudeRate * sin(t));
+        } catch (std::bad_cast const& e) {
+            std::cout << "bad_cast!\n";
+        }
     }
 
     void setRadius(float radius) {

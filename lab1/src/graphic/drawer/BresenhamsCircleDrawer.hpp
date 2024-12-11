@@ -9,23 +9,26 @@
 namespace cust {
 class BresenhamsCircleDrawer : public CircleDrawer {
    public:
-    void draw(Circle const& circle) override {
-        float x = 0, y = circle.r;
-        float delta = 3 - 2 * circle.r;
-        glBegin(GL_LINE_LOOP);
-        glColor3f(0, 0, 1);
-        putPixels(circle.x, circle.y, x, y);
-        while (x <= y) {
-            if (delta > 0) {
-                y--;
-                delta += 4 * (x - y) + 10;
-            } else {
-                delta += 4 * x + 6.0;
+    void draw(ptr<Figure const> const& figure) override {
+        try {
+            auto circle = std::dynamic_pointer_cast<Circle const>(figure);
+            float x = 0, y = circle->r;
+            float delta = 3 - 2 * circle->r;
+            glBegin(GL_LINE_LOOP);
+            glColor3f(0, 0, 1);
+            putPixels(circle->x, circle->y, x, y);
+            while (x <= y) {
+                if (delta > 0) {
+                    y--;
+                    delta += 4 * (x - y) + 10;
+                } else {
+                    delta += 4 * x + 6.0;
+                }
+                ++x;
+                putPixels(circle->x, circle->y, x, y);
             }
-            ++x;
-            putPixels(circle.x, circle.y, x, y);
-        }
-        glEnd();
+            glEnd();
+        } catch (std::bad_cast const& e) {}
     }
 
    protected:
