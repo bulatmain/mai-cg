@@ -168,8 +168,22 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
-
+        
         glm::mat4 model = glm::mat4(1.0f);
+
+        // Радиус движения по окружности
+        float radius = 2.0f;
+        // Вычисление текущей позиции куба на окружности
+        float angle = glfwGetTime(); // Угол движения по окружности (увеличивается со временем)
+        float x = radius * cos(angle);
+        float y = radius * sin(angle);
+
+        // Применение трансляции
+        model = glm::translate(model, glm::vec3(x, y, 0.f));
+
+        // Применение вращения
+        model = glm::rotate(model, angle, glm::vec3(0.5f, 1.0f, 0.0f));
+
         model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
 
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
