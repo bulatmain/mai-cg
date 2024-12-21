@@ -1,19 +1,18 @@
-#include <glad/glad.h>
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <glad/glad.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
-// Callbacks for user input
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
-// Settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-// Shader sources
 const char* vertexShaderSource = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
@@ -75,33 +74,30 @@ void main()
 // Pyramid vertices and normals
 float vertices[] = {
     // Positions          // Normals
-    0.0f,  0.5f,  0.0f,   0.0f,  0.707f,  0.0f, // Apex
-   -0.5f, -0.5f, -0.5f,  -0.577f, -0.577f, -0.577f, // Base left-back
-    0.5f, -0.5f, -0.5f,   0.577f, -0.577f, -0.577f, // Base right-back
+    0.0f, 0.5f, 0.0f, 0.0f, 0.707f, 0.0f,            // Apex
+    -0.5f, -0.5f, -0.5f, -0.577f, -0.577f, -0.577f,  // Base left-back
+    0.5f, -0.5f, -0.5f, 0.577f, -0.577f, -0.577f,    // Base right-back
 
-    0.0f,  0.5f,  0.0f,   0.0f,  0.707f,  0.0f, // Apex
-    0.5f, -0.5f, -0.5f,   0.577f, -0.577f, -0.577f, // Base right-back
-    0.5f, -0.5f,  0.5f,   0.577f, -0.577f,  0.577f, // Base right-front
+    0.0f, 0.5f, 0.0f, 0.0f, 0.707f, 0.0f,          // Apex
+    0.5f, -0.5f, -0.5f, 0.577f, -0.577f, -0.577f,  // Base right-back
+    0.5f, -0.5f, 0.5f, 0.577f, -0.577f, 0.577f,    // Base right-front
 
-    0.0f,  0.5f,  0.0f,   0.0f,  0.707f,  0.0f, // Apex
-    0.5f, -0.5f,  0.5f,   0.577f, -0.577f,  0.577f, // Base right-front
-   -0.5f, -0.5f,  0.5f,  -0.577f, -0.577f,  0.577f, // Base left-front
+    0.0f, 0.5f, 0.0f, 0.0f, 0.707f, 0.0f,          // Apex
+    0.5f, -0.5f, 0.5f, 0.577f, -0.577f, 0.577f,    // Base right-front
+    -0.5f, -0.5f, 0.5f, -0.577f, -0.577f, 0.577f,  // Base left-front
 
-    0.0f,  0.5f,  0.0f,   0.0f,  0.707f,  0.0f, // Apex
-   -0.5f, -0.5f,  0.5f,  -0.577f, -0.577f,  0.577f, // Base left-front
-   -0.5f, -0.5f, -0.5f,  -0.577f, -0.577f, -0.577f  // Base left-back
+    0.0f, 0.5f, 0.0f, 0.0f, 0.707f, 0.0f,           // Apex
+    -0.5f, -0.5f, 0.5f, -0.577f, -0.577f, 0.577f,   // Base left-front
+    -0.5f, -0.5f, -0.5f, -0.577f, -0.577f, -0.577f  // Base left-back
 };
 
 // Global variables for control
 float shininess = 32.0f;
 float specularStrength = 0.5f;
-bool controlShininess = true; // true: shininess, false: specularStrength
+bool controlShininess = true;  // true: shininess, false: specularStrength
 
-int main()
-{
-    // Initialize GLFW
-    if (!glfwInit())
-    {
+int main() {
+    if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
     }
@@ -110,10 +106,8 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Create a window
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "3D Pyramid with Specular Lighting", NULL, NULL);
-    if (!window)
-    {
+    if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
@@ -121,14 +115,11 @@ int main()
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    // Load GLAD
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
 
-    // Build and compile shaders
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
@@ -164,15 +155,11 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    // Enable depth testing
     glEnable(GL_DEPTH_TEST);
 
-    // Lighting settings
     glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
-    // Render loop
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -180,7 +167,6 @@ int main()
 
         glUseProgram(shaderProgram);
 
-        // Set uniforms
         glUniform3f(glGetUniformLocation(shaderProgram, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
         glUniform3f(glGetUniformLocation(shaderProgram, "viewPos"), 0.0f, 0.0f, 3.0f);
         glUniform3f(glGetUniformLocation(shaderProgram, "lightColor"), 1.0f, 1.0f, 1.0f);
@@ -188,7 +174,6 @@ int main()
         glUniform1f(glGetUniformLocation(shaderProgram, "shininess"), shininess);
         glUniform1f(glGetUniformLocation(shaderProgram, "specularStrength"), specularStrength);
 
-        // Camera and transforms
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -197,7 +182,6 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-        // Draw the pyramid
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 12);
 
@@ -205,7 +189,6 @@ int main()
         glfwPollEvents();
     }
 
-    // Clean up
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
@@ -214,13 +197,11 @@ int main()
     return 0;
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window)
-{
+void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
@@ -230,19 +211,17 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
         controlShininess = false;
 
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-    {
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
         if (controlShininess)
-            shininess = glm::min(shininess + 1.0f, 128.0f); // Clamp to max 128
+            shininess = glm::min(shininess + 1.0f, 128.0f);
         else
-            specularStrength = glm::min(specularStrength + 0.1f, 1.0f); // Clamp to max 1.0
+            specularStrength = glm::min(specularStrength + 0.1f, 1.0f);
     }
 
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    {
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
         if (controlShininess)
-            shininess = glm::max(shininess - 1.0f, 1.0f); // Clamp to min 1
+            shininess = glm::max(shininess - 1.0f, 1.0f);
         else
-            specularStrength = glm::max(specularStrength - 0.1f, 0.0f); // Clamp to min 0
+            specularStrength = glm::max(specularStrength - 0.1f, 0.0f);
     }
 }
