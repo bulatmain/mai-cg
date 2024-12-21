@@ -1,0 +1,1 @@
+/usr/bin/c++  -std=c++20 CMakeFiles/exec.dir/src/cpp/main.cpp.o -o exec  libglad.a /usr/lib/x86_64-linux-gnu/libglfw.so.3.3 /usr/lib/x86_64-linux-gnu/libGLX.so /usr/lib/x86_64-linux-gnu/libOpenGL.so 
