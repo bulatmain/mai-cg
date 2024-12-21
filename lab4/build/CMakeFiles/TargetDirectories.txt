@@ -1,4 +1,0 @@
-/home/bulat/mai/studying/sem5/cg/lab4/build/CMakeFiles/glad.dir
-/home/bulat/mai/studying/sem5/cg/lab4/build/CMakeFiles/exec.dir
-/home/bulat/mai/studying/sem5/cg/lab4/build/CMakeFiles/edit_cache.dir
-/home/bulat/mai/studying/sem5/cg/lab4/build/CMakeFiles/rebuild_cache.dir

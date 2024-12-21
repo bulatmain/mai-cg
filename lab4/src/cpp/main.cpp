@@ -1,6 +1,5 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -76,26 +75,33 @@ void main()
 // Pyramid vertices and normals
 float vertices[] = {
     // Positions          // Normals
-    0.0f, 0.5f, 0.0f, 0.0f, 0.707f, 0.0f,            // Apex
-    -0.5f, -0.5f, -0.5f, -0.577f, -0.577f, -0.577f,  // Base left-back
-    0.5f, -0.5f, -0.5f, 0.577f, -0.577f, -0.577f,    // Base right-back
+    0.0f,  0.5f,  0.0f,   0.0f,  0.707f,  0.0f, // Apex
+   -0.5f, -0.5f, -0.5f,  -0.577f, -0.577f, -0.577f, // Base left-back
+    0.5f, -0.5f, -0.5f,   0.577f, -0.577f, -0.577f, // Base right-back
 
-    0.0f, 0.5f, 0.0f, 0.0f, 0.707f, 0.0f,          // Apex
-    0.5f, -0.5f, -0.5f, 0.577f, -0.577f, -0.577f,  // Base right-back
-    0.5f, -0.5f, 0.5f, 0.577f, -0.577f, 0.577f,    // Base right-front
+    0.0f,  0.5f,  0.0f,   0.0f,  0.707f,  0.0f, // Apex
+    0.5f, -0.5f, -0.5f,   0.577f, -0.577f, -0.577f, // Base right-back
+    0.5f, -0.5f,  0.5f,   0.577f, -0.577f,  0.577f, // Base right-front
 
-    0.0f, 0.5f, 0.0f, 0.0f, 0.707f, 0.0f,          // Apex
-    0.5f, -0.5f, 0.5f, 0.577f, -0.577f, 0.577f,    // Base right-front
-    -0.5f, -0.5f, 0.5f, -0.577f, -0.577f, 0.577f,  // Base left-front
+    0.0f,  0.5f,  0.0f,   0.0f,  0.707f,  0.0f, // Apex
+    0.5f, -0.5f,  0.5f,   0.577f, -0.577f,  0.577f, // Base right-front
+   -0.5f, -0.5f,  0.5f,  -0.577f, -0.577f,  0.577f, // Base left-front
 
-    0.0f, 0.5f, 0.0f, 0.0f, 0.707f, 0.0f,           // Apex
-    -0.5f, -0.5f, 0.5f, -0.577f, -0.577f, 0.577f,   // Base left-front
-    -0.5f, -0.5f, -0.5f, -0.577f, -0.577f, -0.577f  // Base left-back
+    0.0f,  0.5f,  0.0f,   0.0f,  0.707f,  0.0f, // Apex
+   -0.5f, -0.5f,  0.5f,  -0.577f, -0.577f,  0.577f, // Base left-front
+   -0.5f, -0.5f, -0.5f,  -0.577f, -0.577f, -0.577f  // Base left-back
 };
 
-int main() {
+// Global variables for control
+float shininess = 32.0f;
+float specularStrength = 0.5f;
+bool controlShininess = true; // true: shininess, false: specularStrength
+
+int main()
+{
     // Initialize GLFW
-    if (!glfwInit()) {
+    if (!glfwInit())
+    {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
     }
@@ -106,7 +112,8 @@ int main() {
 
     // Create a window
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "3D Pyramid with Specular Lighting", NULL, NULL);
-    if (!window) {
+    if (!window)
+    {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
@@ -115,7 +122,8 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // Load GLAD
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
         std::cerr << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
@@ -161,11 +169,10 @@ int main() {
 
     // Lighting settings
     glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-    float shininess = 32.0f;
-    float specularStrength = 0.5f;
 
     // Render loop
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window))
+    {
         processInput(window);
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -207,11 +214,35 @@ int main() {
     return 0;
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window) {
+void processInput(GLFWwindow* window)
+{
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+        controlShininess = true;
+
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+        controlShininess = false;
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        if (controlShininess)
+            shininess = glm::min(shininess + 1.0f, 128.0f); // Clamp to max 128
+        else
+            specularStrength = glm::min(specularStrength + 0.1f, 1.0f); // Clamp to max 1.0
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+        if (controlShininess)
+            shininess = glm::max(shininess - 1.0f, 1.0f); // Clamp to min 1
+        else
+            specularStrength = glm::max(specularStrength - 0.1f, 0.0f); // Clamp to min 0
+    }
 }
