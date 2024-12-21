@@ -10,7 +10,11 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow* window, glm::vec3& cameraPos, glm::vec3& cameraFront, glm::vec3& cameraUp, float deltaTime) {
+// Переменная для переключения порядка трансформаций
+bool rotateFirst = false;
+
+// Callback для обработки ввода клавиши 0
+void processInput(GLFWwindow* window, glm::vec3& cameraPos, glm::vec3& cameraFront, glm::vec3& cameraUp, float deltaTime, bool& rotateFirst) {
     float cameraSpeed = 2.5f * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         cameraPos += cameraSpeed * cameraFront;
@@ -20,6 +24,16 @@ void processInput(GLFWwindow* window, glm::vec3& cameraPos, glm::vec3& cameraFro
         cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+
+    // Переключение порядка по нажатию клавиши 0
+    static bool keyPressed = false;
+    if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS && !keyPressed) {
+        rotateFirst = !rotateFirst; // Переключить флаг
+        keyPressed = true;         // Установить флаг, что клавиша была нажата
+    }
+    if (glfwGetKey(window, GLFW_KEY_0) == GLFW_RELEASE) {
+        keyPressed = false;        // Сбросить флаг при отпускании клавиши
+    }
 }
 
 // Вершинный шейдер
@@ -150,7 +164,7 @@ int main() {
     glBindVertexArray(0);
 
     // Параметры камеры
-    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 7.0f);
     glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -162,7 +176,7 @@ int main() {
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        processInput(window, cameraPos, cameraFront, cameraUp, deltaTime);
+        processInput(window, cameraPos, cameraFront, cameraUp, deltaTime, rotateFirst);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -178,13 +192,19 @@ int main() {
         float x = radius * cos(angle);
         float y = radius * sin(angle);
 
-        // Применение трансляции
-        model = glm::translate(model, glm::vec3(x, y, 0.f));
+        // Применение трансформаций в зависимости от значения rotateFirst
+        if (rotateFirst) {
+            // Применение вращения
+            model = glm::rotate(model, angle, glm::vec3(1.f, 1.f, 0.0f));
+            // Применение трансляции
+            model = glm::translate(model, glm::vec3(x, y, 0.f));
+        } else {
+            // Применение трансляции
+            model = glm::translate(model, glm::vec3(x, y, 0.f));
+            // Применение вращения
+            model = glm::rotate(model, angle, glm::vec3(1.f, 1.f, 0.0f));
+        }
 
-        // Применение вращения
-        model = glm::rotate(model, angle, glm::vec3(0.5f, 1.0f, 0.0f));
-
-        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
 
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
