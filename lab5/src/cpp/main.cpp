@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 
 #include <cmath>
+#include <glm/glm.hpp>
 #include <iostream>
 #include <memory>
 #include <random>
@@ -14,46 +15,53 @@ const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 600;
 
 // Helper functions
-struct Vec3 {
-    float x, y, z;
+struct vec3 {
+    float x;
+    float y;
+    float z;
 
-    Vec3 operator+(const Vec3& v) const { return {x + v.x, y + v.y, z + v.z}; }
-    Vec3 operator-(const Vec3& v) const { return {x - v.x, y - v.y, z - v.z}; }
-    Vec3 operator*(float scalar) const { return {x * scalar, y * scalar, z * scalar}; }
-    Vec3 operator/(float scalar) const { return {x / scalar, y / scalar, z / scalar}; }
-    Vec3 normalized() const {
+    vec3 operator+(const vec3& v) const { return {x + v.x, y + v.y, z + v.z}; }
+    vec3 operator-(const vec3& v) const { return {x - v.x, y - v.y, z - v.z}; }
+    vec3 operator-() const { return {-x, -y, -z}; }
+    vec3 operator+() const { return {+x, +y, +z}; }
+    vec3 operator*(float scalar) const { return {x * scalar, y * scalar, z * scalar}; }
+    vec3 operator/(float scalar) const { return {x / scalar, y / scalar, z / scalar}; }
+
+    vec3 normalized() const {
         float mag = std::sqrt(x * x + y * y + z * z);
-        return {x / mag, y / mag, z / mag};
+        return vec3{x / mag, y / mag, z / mag};
     }
-    float dot(const Vec3& v) const { return x * v.x + y * v.y + z * v.z; }
-    Vec3 cross(const Vec3& v) const {
+    float dot(const vec3& v) const {
+        return x * v.x + y * v.y + z * v.z;
+    }
+    vec3 cross(const vec3& v) const {
         return {y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x};
     }
 };
 
 struct Ray {
-    Vec3 origin;
-    Vec3 direction;
+    vec3 origin;
+    vec3 direction;
 };
 
 struct Figure {
     virtual bool intersect(const Ray& ray, float& t) const = 0;
-    virtual Vec3 getColor() const = 0;
-    virtual Vec3 getNormal(Vec3 const& hit_point) const = 0;
+    virtual vec3 getColor() const = 0;
+    virtual vec3 getNormal(vec3 const& hit_point) const = 0;
 };
 
 struct Sphere : public Figure {
-    Vec3 center;
+    vec3 center;
     float radius;
-    Vec3 color;
+    vec3 color;
 
-    Sphere(Vec3 const& center,
+    Sphere(vec3 const& center,
            float radius,
-           Vec3 const& color = {1.f, 0.f, 0.f})
+           vec3 const& color = {1.f, 0.f, 0.f})
         : center(center), radius(radius), color(color) {}
 
     bool intersect(const Ray& ray, float& t) const override {
-        Vec3 oc = ray.origin - center;
+        vec3 oc = ray.origin - center;
         float a = ray.direction.dot(ray.direction);
         float b = 2.f * oc.dot(ray.direction);
         float c = oc.dot(oc) - radius * radius;
@@ -63,20 +71,20 @@ struct Sphere : public Figure {
         return t > 0;
     }
 
-    Vec3 getColor() const override {
+    vec3 getColor() const override {
         return color;
     }
 
-    Vec3 getNormal(Vec3 const& hit_point) const override {
+    vec3 getNormal(vec3 const& hit_point) const override {
         return (hit_point - center).normalized();
     }
 };
 
 struct Plane : public Figure {
-    Vec3 point;
-    Vec3 normal;
+    vec3 point;
+    vec3 normal;
 
-    Plane(Vec3 const& point, Vec3 const& normal)
+    Plane(vec3 const& point, vec3 const& normal)
         : point(point), normal(normal) {}
 
     bool intersect(const Ray& ray, float& t) const override {
@@ -88,11 +96,11 @@ struct Plane : public Figure {
         return false;
     }
 
-    Vec3 getColor() const override {
+    vec3 getColor() const override {
         return {0.6f, 0.6f, 0.6f};
     }
 
-    Vec3 getNormal(Vec3 const& hit_point) const override {
+    vec3 getNormal(vec3 const& hit_point) const override {
         return normal;
     }
 };
@@ -114,17 +122,27 @@ ptr<T> construct(Args... args) {
     return std::make_shared<T>(args...);
 }
 
+struct Light {
+    vec3 position;   // Light source position
+    vec3 color;      // Light color (white)
+    float shininess; // Specular shininess
+
+};
+
 class Renderer : public std::enable_shared_from_this<Renderer> {
    private:
     std::mt19937 gen;
     std::uniform_real_distribution<float> dis;
     vecp<Figure> figures;
+    Light light;
+
 
    public:
     static ptr<Renderer> construct(std::mt19937 const& gen,
                                    std::uniform_real_distribution<float> const& dis,
-                                   vecp<Figure> const& figures) {
-        return ptr<Renderer>(new Renderer(gen, dis, figures));
+                                   vecp<Figure> const& figures,
+                                   Light const& light) {
+        return ptr<Renderer>(new Renderer(gen, dis, figures, light));
     }
 
     void render(unsigned char* framebuffer) {
@@ -145,55 +163,9 @@ class Renderer : public std::enable_shared_from_this<Renderer> {
    private:
     Renderer(std::mt19937 const& gen,
              std::uniform_real_distribution<float> const& dis,
-             vecp<Figure> const& figures)
-        : gen(std::move(gen)), dis(std::move(dis)), figures(figures) {}
-
-    // Random number generation
-    Vec3 random_in_hemisphere(const Vec3& normal) {
-        while (true) {
-            Vec3 random_vec = {dis(gen) * 2.f - 1.f, dis(gen) * 2.f - 1.f, dis(gen) * 2.f - 1.f};
-            if (random_vec.dot(random_vec) <= 1.f && random_vec.dot(normal) > 0.f) {
-                return random_vec.normalized();
-            }
-        }
-    }
-
-    Vec3 trace(const Ray& ray, int depth = 0) {
-        float t_min = INFINITY;
-        Vec3 color = {0.f, 0.f, 0.f};
-
-        // Check sphere intersections
-        for (const auto& figure : figures) {
-            float t;
-            if (figure->intersect(ray, t) && t < t_min) {
-                t_min = t;
-                Vec3 hit_point = ray.origin + ray.direction * t;
-                Vec3 normal = figure->getNormal(hit_point);
-                color = figure->getColor();
-
-                if (depth < 2) {  // Limit recursion depth
-                    Vec3 indirect_light = {0.f, 0.f, 0.f};
-                    for (unsigned int i = 0; i < SAMPLES; ++i) {
-                        Vec3 random_dir = random_in_hemisphere(normal);
-                        Ray indirect_ray = {hit_point, random_dir};
-                        indirect_light = indirect_light + trace(indirect_ray, depth + 1);
-                    }
-                    color = color * 0.8f + (indirect_light / static_cast<float>(SAMPLES)) * 0.2f;
-                }
-            }
-        }
-
-        // If no hit, return sky color
-        if (t_min == INFINITY) {
-            return Vec3{0.5f, 0.7f, 1.f} * (0.5f + 0.5f * ray.direction.y);  // Sky color gradient
-        }
-
-        // Add ambient lighting
-        Vec3 ambient_light = {0.2f, 0.2f, 0.2f};      // Low-level ambient light
-        color = color * 0.8f + ambient_light * 0.2f;  // Blend object color with ambient light
-
-        return color;
-    }
+             vecp<Figure> const& figures,
+             Light const& light)
+        : gen(std::move(gen)), dis(std::move(dis)), figures(figures), light(light) {}
 
     // Render scene
     static void renderSection(ptr<Renderer> renderer, int start, int end, unsigned char* framebuffer) {
@@ -210,7 +182,7 @@ class Renderer : public std::enable_shared_from_this<Renderer> {
                 ray.direction = {u, v, -1.f};
                 ray.direction = ray.direction.normalized();
 
-                Vec3 color = renderer->trace(ray);
+                vec3 color = renderer->trace(ray);
 
                 int index = (y * WIDTH + x) * 3;
                 framebuffer[index] = static_cast<unsigned char>(std::clamp(color.x, 0.f, 1.f) * 255);
@@ -218,6 +190,39 @@ class Renderer : public std::enable_shared_from_this<Renderer> {
                 framebuffer[index + 2] = static_cast<unsigned char>(std::clamp(color.z, 0.f, 1.f) * 255);
             }
         }
+    }
+
+    vec3 trace(const Ray& ray, int depth = 0) {
+        float t_min = INFINITY;
+        vec3 color = {0.f, 0.f, 0.f};
+
+        for (const auto& figure : figures) {
+            float t = 0.f;
+            if (figure->intersect(ray, t) && t < t_min) {
+                t_min = t;
+                vec3 hit_point = ray.origin + ray.direction * t;
+                vec3 normal = figure->getNormal(hit_point);
+                vec3 view_dir = -ray.direction;
+
+                // Lighting calculations
+                vec3 light_dir = (light.position - hit_point).normalized();
+                vec3 reflect_dir = (light_dir - normal * 2.f * light_dir.dot(normal)).normalized();
+
+                float diff = std::max(normal.dot(light_dir), 0.f);  // Diffuse
+                float spec = std::pow(std::max(view_dir.dot(reflect_dir), 0.f), light.shininess);  // Specular
+
+                // Ambient light
+                vec3 ambient = figure->getColor() * 0.2f; // Увеличьте базовый фон
+                color = figure->getColor() * diff + light.color * spec + ambient;
+            }
+        }
+
+        // If no hit, return sky color
+        if (t_min == INFINITY) {
+            return vec3{0.5f, 0.7f, 1.f} * (0.5f + 0.5f * ray.direction.y);
+        }
+
+        return color;
     }
 };
 
@@ -242,16 +247,22 @@ int main() {
 
     // Scene objects
     vecp<Figure> figures{
-        construct<Sphere>(Vec3{0.f, -1.f, -8.f}, 2.f, Vec3{1.f, 0.f, 0.f}),
-        construct<Sphere>(Vec3{-2.f, 0.f, -6.f}, 1.f, Vec3{0.f, 1.f, 0.f}),
-        construct<Sphere>(Vec3{2.f, 0.f, -6.f}, 1.f, Vec3{0.f, 0.f, 1.f}),
-        construct<Plane>(Vec3{0.f, 1.f, 0.f}, Vec3{0.f, -1.f, 0.f})};
+        construct<Sphere>(vec3{0.f, -1.f, -8.f}, 2.f, vec3{1.f, 0.f, 0.f}),
+        construct<Sphere>(vec3{-2.f, 0.f, -6.f}, 1.f, vec3{0.f, 1.f, 0.f}),
+        construct<Sphere>(vec3{2.f, 0.f, -6.f}, 1.f, vec3{0.f, 0.f, 1.f}),
+        construct<Plane>(vec3{0.f, 1.f, 0.f}, vec3{0.f, -1.8f, 0.f})};
 
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<float> dis(0.f, 1.f);
 
-    auto renderer = Renderer::construct(gen, dis, figures);
+    Light light(
+        {-10.f, -10.f, 10.f},
+        {1.f, 1.f, 1.f},
+        32.f
+    );
+
+    auto renderer = Renderer::construct(gen, dis, figures, light);
 
     unsigned char* framebuffer = new unsigned char[WIDTH * HEIGHT * 3];
 
